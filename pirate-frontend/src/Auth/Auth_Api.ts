@@ -18,7 +18,7 @@ export const onLogin = async (data: Credentials) => {
 
     const requestConfig : AxiosRequestConfig = {
             method:'post',
-            url: process.env.REACT_APP_BACKEND_API + '/Login',
+            url: process.env.REACT_APP_BACKEND_API + '/api/user/login',
             data        
     }
 
@@ -30,14 +30,22 @@ export const onLogin = async (data: Credentials) => {
         }
     } 
     catch (e) {
-        return {error:e.response.data}
+        console.error(e)
+
+        if (e.response){
+            return {error:e.response.data}
+        }
+
+        else{
+            return{error:"No response, probably network problems"} 
+        }
     }
 } 
 
 export const onRegister = async(data : Credentials) => {
     const requestConfig : AxiosRequestConfig = {
         method:'post',
-        url: process.env.REACT_APP_BACKEND_API + '/Register',
+        url: process.env.REACT_APP_BACKEND_API + '/api/user/register',
         data     
     };
 
