@@ -10,31 +10,43 @@ export interface IHomeState {
 }
 
 export default class Home extends React.Component<IHomeProps, IHomeState> {
+ 
   constructor(props: IHomeProps) {
     super(props);
 
     this.state = {
-      data: "pieterjan"
+      data: {}
     }
   }
 
+  interval: any;
 
- async componentDidMount() {
+async request(){
 
     // POST request using fetch with async/await
     const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'React POST Request Example',username:localStorage.getItem('Username') })
-  };
-  const response = await fetch('http://localhost:3100/api/handle', requestOptions);
-  const data = await response.json();
-  console.log(data.username)
-  // this.setState({ postId: data.id });
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'auth-token': localStorage.getItem('KEY_TOKEN')! }
+    };
+    const response = await fetch('http://localhost:3100/api/GetData', requestOptions);
+    const data = await response.json();
+    console.log(data)
+    this.setState({ data: data });
+
+}
+
+  async componentDidMount() {
+    // set Interval
+    // this.interval = setInterval(this.request, 1000);
+
+    this.interval = setInterval(()=>{this.request()},1000)
+
   }
 
+  componentWillUnmount() {
+    clearInterval(this.interval );
+  }
 
-  
 
 
 
@@ -49,7 +61,7 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     return (
 
       <div>
-        <h1>hi {username}</h1>
+        <h1>hi {username} BoatLocation = {this.state.data.BoatLocationColumn}</h1>
         <button onClick={event => { Logout() }}>Logout</button>
       </div>
     );
