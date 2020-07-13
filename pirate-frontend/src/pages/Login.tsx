@@ -10,21 +10,10 @@ export const Wrapper = styled.div`
     display:flex;
     background-color: whitesmoke;
     height:100vh; 
+    justify-content:center;
 `
 
 
-export const FormAuthWrapper = styled.div`
-  width:350px;
-  margin : 10px;
-  border: 1px solid #FFFFFF;
-  background-color: darkblue;
-  min-height:100px;
-  flex-shrink:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-around;
-  border-radius: 20px;
-`
 
 export const FormAuth = styled.form`
   background: #F4F4F4 0% 0% no-repeat padding-box;
@@ -35,6 +24,8 @@ export const FormAuth = styled.form`
   display:flex;
   flex-direction:column;
   justify-content:space-between;
+  width:200px;
+  height:200px;
 `
 
 export const Label = styled.label`
@@ -130,14 +121,14 @@ export default class Login extends React.Component<ILoginProps, ILoginState> {
 
       event.preventDefault()
   
-      const { error, token } = await onLogin({username:this.state.UserCredentials.UserName!, password:this.state.UserCredentials.Password!})
-  
+      const { error, token,username } = await onLogin({username:this.state.UserCredentials.UserName!, password:this.state.UserCredentials.Password!})
+
       if (error) {
            this.setState({error:error})
       }
       else {
 
-           this.props.navigation.setContext({ token })
+           this.props.navigation.setContext({ token ,username})
            this.props.navigation.navigate("/")
       }   
   }
@@ -145,21 +136,16 @@ export default class Login extends React.Component<ILoginProps, ILoginState> {
 
     return (
       <Wrapper>
-
                   <FormAuth onSubmit={(event)=>{ login(event) }}>
                     <Label>Username</Label>
-                    <Input placeholder="Username" value={this.state.UserCredentials.UserName} onChange={(event) => this.setState({UserCredentials:{ Password:event.currentTarget.value}})  } ></Input>
+                    <Input placeholder="Username" value={this.state.UserCredentials.UserName} onChange={(event) => this.setState({UserCredentials:{ UserName:event.currentTarget.value, Password: this.state.UserCredentials.Password}})  } ></Input>
                     <Label>Password</Label>
-                    <Input placeholder="Password" type="password" value={this.state.UserCredentials.Password} onChange={(event) => this.setState({UserCredentials:{ Password:event.currentTarget.value}})}></Input>
+                    <Input placeholder="Password" type="password" value={this.state.UserCredentials.Password} onChange={(event) => this.setState({UserCredentials:{ UserName: this.state.UserCredentials.UserName, Password:event.currentTarget.value}})}></Input>
                      <ErrorLabel>{this.state.error}</ErrorLabel>
 
                     <Button>Login</Button>     
                 </FormAuth>
-
       </Wrapper>
-
-
-
     );
   }
 }

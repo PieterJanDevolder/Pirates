@@ -17,14 +17,19 @@ const LoginWithNavigation =  function(props:any) {
   return <Login {...props} navigation={navigation} />;
 }
 
+const HomeWithNavigation =  function(props:any) {
+  const navigation = useNavigation();
+  return <Home {...props} navigation={navigation} />;
+}
 
 
 
 const routes = mount({
   "/": withAuthentication(route({
     title: 'Home',
-    view: <Home />
+    view: <HomeWithNavigation />
 })),
+
 "/Login": route({
   title: 'Login',
   view: <LoginWithNavigation />
@@ -36,7 +41,7 @@ const routes = mount({
 
 
 ReactDOM.render(
-  <Router routes={routes} context={{ token: localStorage.getItem(KEY_TOKEN) }} /> ,
+  <Router routes={routes} context={{ token: localStorage.getItem(KEY_TOKEN),UserName:"dfd" }} /> ,
   document.getElementById('root')
 );
 

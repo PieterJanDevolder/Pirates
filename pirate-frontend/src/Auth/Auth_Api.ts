@@ -23,10 +23,11 @@ export const onLogin = async (data: Credentials) => {
     }
 
     try {
-        const {data:{token}} = await Axios.request<LoginApiResponse>(requestConfig);
-        storeToken(token)
+        const {data:{token,username}} = await Axios.request<LoginApiResponse>(requestConfig);
+        storeToken(token,username)
         return{
-            token
+            "token":token,
+            "username":username
         }
     } 
     catch (e) {
@@ -60,6 +61,9 @@ export const onRegister = async(data : Credentials) => {
 
 export const KEY_TOKEN = "KEY_TOKEN";
 
-const storeToken = (token:string) => {
+
+
+const storeToken = (token:string,username:string) => {
     localStorage.setItem(KEY_TOKEN, token)
+    localStorage.setItem("Username", username)
 }
