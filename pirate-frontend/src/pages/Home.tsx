@@ -2,12 +2,17 @@ import * as React from 'react';
 import { Navigation } from 'navi';
 import styled from 'styled-components';
 import { ReactComponent as Logo } from '../Images/001-ingots.svg'
+// import { ReactComponent as Ship } from '../Images/M5AzXVH-pirate-ship-vector.svg'
+import mainLogo from '../Images/PinClipart.com_pirate-images-clip-art_474598.png'
+import './Home.css'
 
 interface IFieldProps {
   ColumnStart?: number,
   ColumnEnd?: number,
   RowStart?: number,
-  RowEnd?: number
+  RowEnd?: number,
+  SizeL?:number,
+  SizeH?:number
 }
 
 export interface IHomeProps {
@@ -15,17 +20,12 @@ export interface IHomeProps {
 }
 
 export interface IHomeState {
-  data: any
+  data: any,
+  uiItems: any[],
+  teststring:string
 }
 
-const Header = styled.div`
-  width: 100vw;
-  height: 40px;
-  display:grid;
-  grid-template-columns:  repeat(20,1fr);
-  margin: 0 auto;
-  grid-gap: 0;
-`
+
 
 const FieldWrapper = styled.div`
   width: 100vw;
@@ -33,21 +33,8 @@ const FieldWrapper = styled.div`
   display:grid;
   grid-template-columns:  repeat(20,1fr);
   grid-template-rows:  repeat(20,1fr);
-  margin: 0 auto;
-  grid-gap: 0;
+  grid-gap: 1px;
 `
-
-const ColumnWrapper = styled.div`
-  width: 100vw;
-  height: calc(100%-40px);
-  display:grid;
-  grid-template-columns:  repeat(20,1fr);
-  grid-template-rows:  repeat(20,1fr);
-  margin: 0 auto;
-  grid-gap: 0;
-`
-
-
 
 
 const Field = styled.div<IFieldProps>`
@@ -57,9 +44,14 @@ const Field = styled.div<IFieldProps>`
   border: 2px solid black;
   margin: 0 auto;
   grid-column-start: ${props => props.ColumnStart};
-  grid-column-end: ${props => props.ColumnStart! + 1};
+  grid-column-end: ${props => props.ColumnStart! + props.SizeL!};
   grid-row-start:${props => props.RowStart};
-  grid-row-end:${props => props.RowStart! + 1};
+  grid-row-end:${props => props.RowStart! +  + props.SizeH!};
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+ 
 `
 
 const HeadLabel = styled.div`
@@ -74,8 +66,12 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     super(props);
 
     this.state = {
-      data: {}
+      data: {},
+      uiItems: [],
+      teststring : ""
     }
+
+
   }
 
   interval: any;
@@ -91,15 +87,14 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     const data = await response.json();
     console.log(data)
     this.setState({ data: data });
-
   }
 
   async componentDidMount() {
     // set Interval
     // this.interval = setInterval(this.request, 1000);
 
-    this.interval = setInterval(() => { this.request() }, 1000)
-
+    // this.interval = setInterval(() => { this.request() }, 1000)
+    this.renderTemplate()
   }
 
   componentWillUnmount() {
@@ -107,29 +102,57 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   }
 
 
-  renderHeader() {
+  renderTemplate() {
     let uiItems = [];
-
-//Header
+    //Header
     for (let index = 1; index <= 20; index++) {
       uiItems.push(
-        <Field ColumnStart={index} RowStart={1} key={index}>
-          <HeadLabel>    {index}</HeadLabel>
-      
+        <Field  SizeH={1} SizeL={1}  ColumnStart={index} RowStart={1} key={index}>
+          {index}
         </Field>
       )
     }
 
+    //Side
+    for (let index = 1; index <= 20; index++) {
+      uiItems.push(
+        <Field SizeH={1} SizeL={1} ColumnStart={1} RowStart={index + 1} key={'_' + index}>
+          {String.fromCharCode(64 + index)}
+        </Field>
+      )
+    }
 
-//Side
-for (let index = 1; index <= 20; index++) {
-  uiItems.push(
-    <Field ColumnStart={1} RowStart={index+1} key={index}>
-      <HeadLabel>    {index}</HeadLabel>
-  
-    </Field>
-  )
-}
+    //Rows
+    for (let rowindex = 2; rowindex <= 21; rowindex++) {
+      for (let columnindex = 2; columnindex <= 20; columnindex++) {
+
+
+        if(columnindex == 4 && rowindex == 5){
+          uiItems.push(
+            <Field  SizeH={1} SizeL={3}  ColumnStart={columnindex} RowStart={rowindex} key={'&' + 'R'+rowindex.toString()+ 'C'+ columnindex.toString()}>
+                    <img  height='100%' width='100%' src={mainLogo}  alt="fireSpot"/>
+            </Field>
+          )
+        }
+        else{
+          uiItems.push(
+            <Field SizeH={1} SizeL={1} ColumnStart={columnindex} RowStart={rowindex} key={'&' + 'R'+rowindex.toString()+ 'C'+ columnindex.toString()}>
+            </Field>
+          )
+        }
+
+
+      }
+
+ 
+      // var ff = <Field ColumnStart={10} RowStart={3} key={99}>
+      //   <Logo width={'100%'} height={'100%'}  ></Logo>
+      // </Field>
+
+// uiItems.push(ff)
+
+//  this.setState({teststring:"dfd"})
+       this.setState({uiItems:uiItems})
 
 
 
@@ -138,52 +161,15 @@ for (let index = 1; index <= 20; index++) {
       //     <Logo width={'100%'} height={'100%'}  ></Logo>
       //   </Field>
       // )
- 
+
+    }
+
+
+
+
     return uiItems
   }
 
-  // renderDivs() {
-  //   let count = 2, uiItems = [];
-
-
-  //   while (count--) {
-  //     uiItems.push(
-  //       <Field ColumnStart={count} RowStart={count} key={count}>
-  //         <Logo width={'100%'} height={'100%'}  ></Logo>
-  //       </Field>
-  //     )
-  //   }
-
-
-  //   // while (count--)
-
-  //   //   if (count === 399) {
-  //   //     uiItems.push(
-  //   //       <Field ColumnStart={4} RowStart={2}  key={count}>
-  //   //         <Logo width={'100%'}  height={'100%'}  ></Logo>      
-  //   //     </Field>        
-  //   //     )
-
-  //   //   }
-  //   //   else {
-  //   //     uiItems.push(
-
-  //   //       <Field key={count}>
-  //   //         uniqueID: {count}
-  //   //       </Field>
-
-  //   //     )
-
-
-
-  //   //   }
-
-
-
-
-
-  //   return uiItems;
-  // }
 
 
 
@@ -200,10 +186,9 @@ for (let index = 1; index <= 20; index++) {
 
 
 
-        <FieldWrapper>
-
-          {this.renderHeader()}
-        </FieldWrapper>
+      <FieldWrapper>
+        {this.state.uiItems}
+      </FieldWrapper>
 
 
     );
