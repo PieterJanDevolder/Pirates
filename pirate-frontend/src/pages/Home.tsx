@@ -3,11 +3,11 @@ import { Navigation } from 'navi';
 import styled from 'styled-components';
 import { ReactComponent as Logo } from '../Images/001-ingots.svg'
 
-interface IFieldProps{
-  ColumnStart?:number,
-  ColumnEnd?:number,
-  RowStart?:number,
-  RowEnd?:number
+interface IFieldProps {
+  ColumnStart?: number,
+  ColumnEnd?: number,
+  RowStart?: number,
+  RowEnd?: number
 }
 
 export interface IHomeProps {
@@ -18,7 +18,16 @@ export interface IHomeState {
   data: any
 }
 
-const Wrapper = styled.div`
+const Header = styled.div`
+  width: 100vw;
+  height: 40px;
+  display:grid;
+  grid-template-columns:  repeat(20,1fr);
+  margin: 0 auto;
+  grid-gap: 0;
+`
+
+const FieldWrapper = styled.div`
   width: 100vw;
   height: 100vh;
   display:grid;
@@ -27,6 +36,19 @@ const Wrapper = styled.div`
   margin: 0 auto;
   grid-gap: 0;
 `
+
+const ColumnWrapper = styled.div`
+  width: 100vw;
+  height: calc(100%-40px);
+  display:grid;
+  grid-template-columns:  repeat(20,1fr);
+  grid-template-rows:  repeat(20,1fr);
+  margin: 0 auto;
+  grid-gap: 0;
+`
+
+
+
 
 const Field = styled.div<IFieldProps>`
   width:100%;
@@ -38,6 +60,11 @@ const Field = styled.div<IFieldProps>`
   grid-column-end: ${props => props.ColumnStart! + 1};
   grid-row-start:${props => props.RowStart};
   grid-row-end:${props => props.RowStart! + 1};
+`
+
+const HeadLabel = styled.div`
+  text-align:center;
+  font-size:2em;
 `
 
 
@@ -80,48 +107,83 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   }
 
 
-  renderDivs() {
-    let count = 4, uiItems = [];
+  renderHeader() {
+    let uiItems = [];
 
-
-    while(count--){
+//Header
+    for (let index = 1; index <= 20; index++) {
       uiItems.push(
-        <Field ColumnStart={count} RowStart={count}  key={count}>
-          <Logo width={'100%'}  height={'100%'}  ></Logo>      
-      </Field>        
+        <Field ColumnStart={index} RowStart={1} key={index}>
+          <HeadLabel>    {index}</HeadLabel>
+      
+        </Field>
       )
     }
 
 
-    // while (count--)
-
-    //   if (count === 399) {
-    //     uiItems.push(
-    //       <Field ColumnStart={4} RowStart={2}  key={count}>
-    //         <Logo width={'100%'}  height={'100%'}  ></Logo>      
-    //     </Field>        
-    //     )
-
-    //   }
-    //   else {
-    //     uiItems.push(
-
-    //       <Field key={count}>
-    //         uniqueID: {count}
-    //       </Field>
-
-    //     )
-
-
-        
-    //   }
+//Side
+for (let index = 1; index <= 20; index++) {
+  uiItems.push(
+    <Field ColumnStart={1} RowStart={index+1} key={index}>
+      <HeadLabel>    {index}</HeadLabel>
+  
+    </Field>
+  )
+}
 
 
 
-
-
-    return uiItems;
+      // uiItems.push(
+      //   <Field ColumnStart={10} RowStart={3} key={99}>
+      //     <Logo width={'100%'} height={'100%'}  ></Logo>
+      //   </Field>
+      // )
+ 
+    return uiItems
   }
+
+  // renderDivs() {
+  //   let count = 2, uiItems = [];
+
+
+  //   while (count--) {
+  //     uiItems.push(
+  //       <Field ColumnStart={count} RowStart={count} key={count}>
+  //         <Logo width={'100%'} height={'100%'}  ></Logo>
+  //       </Field>
+  //     )
+  //   }
+
+
+  //   // while (count--)
+
+  //   //   if (count === 399) {
+  //   //     uiItems.push(
+  //   //       <Field ColumnStart={4} RowStart={2}  key={count}>
+  //   //         <Logo width={'100%'}  height={'100%'}  ></Logo>      
+  //   //     </Field>        
+  //   //     )
+
+  //   //   }
+  //   //   else {
+  //   //     uiItems.push(
+
+  //   //       <Field key={count}>
+  //   //         uniqueID: {count}
+  //   //       </Field>
+
+  //   //     )
+
+
+
+  //   //   }
+
+
+
+
+
+  //   return uiItems;
+  // }
 
 
 
@@ -134,24 +196,14 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     const username = localStorage.getItem('Username')
 
 
-    const DynamicField = {
-
-    }
-
-
-
     return (
 
 
-      <Wrapper>
 
-        {this.renderDivs()}
+        <FieldWrapper>
 
-  
-
-      </Wrapper>
-
-
+          {this.renderHeader()}
+        </FieldWrapper>
 
 
     );
