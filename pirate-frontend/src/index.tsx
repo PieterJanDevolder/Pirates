@@ -41,7 +41,7 @@ const routes = mount({
 
 
 ReactDOM.render(
-  <Router routes={routes} context={{ token: localStorage.getItem(KEY_TOKEN),UserName:"dfd" }} /> ,
+  <Router routes={routes} context={{ token: localStorage.getItem(KEY_TOKEN)}} /> ,
   document.getElementById('root')
 );
 

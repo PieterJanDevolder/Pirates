@@ -15,10 +15,9 @@ interface LoginApiResponse{
 
 export const onLogin = async (data: Credentials) => {
 
-
     const requestConfig : AxiosRequestConfig = {
             method:'post',
-            url: process.env.REACT_APP_BACKEND_API + '/api/user/login',
+            url: 'http://192.168.1.187:3100'  + '/api/user/login',
             data        
     }
 
@@ -46,7 +45,7 @@ export const onLogin = async (data: Credentials) => {
 export const onRegister = async(data : Credentials) => {
     const requestConfig : AxiosRequestConfig = {
         method:'post',
-        url: process.env.REACT_APP_BACKEND_API + '/api/user/register',
+        url: 'http://192.168.1.187:3100' + '/api/user/register',
         data     
     };
 

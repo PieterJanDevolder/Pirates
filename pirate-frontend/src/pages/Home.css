@@ -1,3 +1,14 @@
 .boat{
-    background-image: url('../Images/PinClipart.com_pirate-images-clip-art_474598.png') ;
+    background-image: url('../Images/002-gallows.svg') ;
+    background-size:100% 100%;
+}
+
+
+.inrange{
+    background-color: grey !important;
+
+}
+
+.inrange:hover{
+        background-color :red !important;
 }
