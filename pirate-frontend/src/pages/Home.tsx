@@ -26,19 +26,27 @@ export interface IHomeState {
   AllowedRange: string[]
 }
 
+interface ILocation {
+  location: string,
+  type: string
+}
+
 interface IGameInfo {
   BoatLocationRow?: string,
   BoatLocationColumn?: number,
   BoatMovingAllowed?: boolean,
-  FiringAllowed?: boolean
+  FiringAllowed?: boolean,
+  OwnTreasure?: ILocation,
+  OtherTreasures?: ILocation,
+  Obstacles?: ILocation
 }
 
-interface IGameData {
-  username?: string,
-  password?: string,
-  date?: Date,
-  GameInfo?: IGameInfo
-};
+// interface IGameData {
+//   username?: string,
+//   password?: string,
+//   date?: Date,
+//   GameInfo?: IGameInfo
+// };
 
 
 const FieldWrapper = styled.div`
@@ -60,7 +68,7 @@ const Field = styled.div<IFieldProps>`
   grid-column-start: ${props => props.ColumnStart};
   grid-column-end: ${props => props.ColumnStart! + props.SizeL!};
   grid-row-start:${props => props.RowStart};
-  grid-row-end:${props => props.RowStart! + + props.SizeH!};
+  grid-row-end:${props => props.RowStart! + props.SizeH!};
 
   display: flex;
   justify-content: center;
@@ -98,26 +106,29 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     // POST request using fetch with async/await
     const response = await fetch('http://localhost:3100/api/GetData', this.iGetDataRequest);
     const data: IGameInfo = await response.json();
-    console.log(data)
 
     if (
-      this.state.GameInfo?.BoatMovingAllowed !== data.BoatMovingAllowed ||
-      this.state.GameInfo?.BoatLocationColumn !== data.BoatLocationColumn ||
-      this.state.GameInfo?.BoatLocationRow !== data.BoatLocationRow
+      JSON.stringify(this.state.GameInfo) !== JSON.stringify(data)
     ) {
-      this.setState({ GameInfo: data });
-      var key = data.BoatLocationRow! + data.BoatLocationColumn!
 
-      this.moveBoat(key)
 
-      if (this.state.LastBoatLocation !== key && this.state.LastBoatLocation !== "") {
-        this.removeBoat(this.state.LastBoatLocation)
+      var NewLocation = data.BoatLocationRow! + data.BoatLocationColumn!
+
+      //BOAT
+      if (this.state.GameInfo?.BoatLocationColumn != data.BoatLocationColumn || this.state.GameInfo?.BoatLocationRow != data.BoatLocationRow) {
+        this.moveBoat(NewLocation)
+        // this.removeBoat(this.state.LastBoatLocation)
       }
 
-      this.setState({ LastBoatLocation: key })
+      //OWN Treasure
+      if (this.state.GameInfo?.OwnTreasure?.location != data.OwnTreasure?.location || this.state.GameInfo?.OwnTreasure?.type != data.OwnTreasure?.type) {
+        this.removeItemFromMap(data.OwnTreasure?.location!,data.OwnTreasure?.type!)
+        this.addItemToMap(data.OwnTreasure?.location!, data.OwnTreasure?.type!)
+    
+      }
 
-      console.log('moving boat')
-
+      this.setState({ LastBoatLocation: NewLocation })
+      this.setState({ GameInfo: data });
     }
   }
 
@@ -137,7 +148,7 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   }
 
   async componentDidMount() {
-    this.interval = setInterval(() => { this.GetDataRequest() }, 1000)
+    this.interval = setInterval(() => { this.GetDataRequest() }, 200)
     this.renderTemplate()
   }
 
@@ -171,9 +182,9 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
         //Create key string 
         var Key = String.fromCharCode(63 + rowindex) + columnindex.toString()
-        if (columnindex == 999999 && rowindex == 99999) {
+        if (Key === 'AZ11') {
           uiItems.set(Key,
-            <Field className="boat" SizeH={1} SizeL={1} ColumnStart={columnindex} RowStart={rowindex} key={Key}>
+            <Field className="treasure" SizeH={1} SizeL={1} ColumnStart={columnindex} RowStart={rowindex} key={Key}>
             </Field>
           )
         }
@@ -192,143 +203,216 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   }
 
   moveBoat(ItemKey: string) {
+    var CreateList: string[] = []
+    var RemoveList: string[] = []
 
-    if (this.state.LastBoatLocation !== "") {
-      console.log(`Remove area: ${this.state.LastBoatLocation} `)
-      this.removeRadius(this.state.LastBoatLocation)
-    }
 
     if (ItemKey != "") {
-      console.log(`Create area: ${ItemKey} `)
-      this.createRadius(ItemKey)
+      CreateList = this.createRadius(ItemKey)
     }
 
+    if (this.state.LastBoatLocation !== "") {
+      RemoveList = this.removeRadius(this.state.LastBoatLocation, CreateList)
+    }
 
+    if (RemoveList.length != 0) {
+      for (let index = 0; index < RemoveList.length; index++) {
+        var itemFromMap = this.state.uiItems.get(RemoveList[index])
+        var classNames: string = itemFromMap?.props.className
+        if (classNames) {
+          classNames = classNames.replace('inrange', '')
+        }
+        var item = <Field className={classNames} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
+        </Field>
+        this.state.uiItems.set(RemoveList[index], item)
+      }
+    }
+
+    if (CreateList.length != 0) {
+      for (let index = 0; index < CreateList.length; index++) {
+        var itemFromMap = this.state.uiItems.get(CreateList[index])
+        var item = <Field onClick={(event) => { this.moveBoatFromUi(event.currentTarget.id) }} className="inrange" SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
+        </Field>
+        this.state.uiItems.set(CreateList[index], item)
+      }
+    }
+
+    //Boat 
     var itemFromMap = this.state.uiItems.get(ItemKey)
-    var item = <Field className="boat" SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} key={itemFromMap?.key?.toString()}>
+    var item = <Field className={`boat ${itemFromMap?.props.className}`} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
     </Field>
     this.state.uiItems.set(ItemKey, item)
+
 
     this.setState({ uiItems: this.state.uiItems })
   }
 
   createRadius(ItemKey: string) {
 
-    var AllowedList: string[] = []
     //Create radius
     //Left top
+    var UiList: string[] = [];
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) - 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
     //Mid top
     Column = Number(ItemKey.substring(1));
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
+
 
     //Right top
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
     //Left mid
     var Row = String.fromCharCode(ItemKey.charCodeAt(0));
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
+
+    //Mid Mid 
+    var Row = String.fromCharCode(ItemKey.charCodeAt(0));
+    var Column = Number(ItemKey.substring(1));
+    UiList.push(Row.toString() + Column.toString())
 
     //Right mid
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
     //Left bottom
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) + 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
     //Mid bottom
     Column = Number(ItemKey.substring(1));
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
     //Right bottom
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    UiList.push(Row.toString() + Column.toString())
 
-    this.setState({AllowedRange : AllowedList})
-
-     for (let index = 0; index < AllowedList.length; index++) {
-      var itemFromMap = this.state.uiItems.get(AllowedList[index])
-      var item = <Field onClick={(event) => { this.moveBoatFromUi(event.currentTarget.id) }} className="inrange" SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
-      </Field>
-      this.state.uiItems.set(AllowedList[index], item)
-    }
+    return UiList
   }
 
-  removeRadius(ItemKey: string) {
+  removeRadius(ItemKey: string, CreateList: string[]) {
 
-    debugger
-    var AllowedList: string[] = []
+
+    var UiList: string[] = [];
     //Create radius
     //Left top
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) - 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Mid top
     Column = Number(ItemKey.substring(1));
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Right top
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Left mid
     var Row = String.fromCharCode(ItemKey.charCodeAt(0));
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
+
+    //Mid mid
+    var Row = String.fromCharCode(ItemKey.charCodeAt(0));
+    var Column = Number(ItemKey.substring(1));
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Right mid
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Left bottom
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) + 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Mid bottom
     Column = Number(ItemKey.substring(1));
-    AllowedList.push(Row.toString() + Column.toString())
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
+    }
 
     //Right bottom
     Column = Number(ItemKey.substring(1)) + 1;
-    AllowedList.push(Row.toString() + Column.toString())
-
-
-    for (let index = 0; index < AllowedList.length; index++) {
-      var itemFromMap = this.state.uiItems.get(AllowedList[index])
-      var classNames: string = itemFromMap?.props.className
-      var item = <Field onClick={(event) => { this.moveBoatFromUi(event.currentTarget.id) }} className={classNames.replace('inrange','')} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
-      </Field>
-      this.state.uiItems.set(AllowedList[index], item)
+    if (!CreateList.includes(Row.toString() + Column.toString())) {
+      UiList.push(Row.toString() + Column.toString())
     }
+
+
+    return UiList
   }
 
 
-  removeBoat(ItemKey: string) {
+  // removeBoat(ItemKey: string) {
+  //   if (ItemKey !== ""){
 
-    var itemFromMap = this.state.uiItems.get(ItemKey)
+  //     var itemFromMap = this.state.uiItems.get(ItemKey)
 
-    var item = <Field SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} key={itemFromMap?.key?.toString()}>
-    </Field>
+  //     var item = <Field className={itemFromMap?.props.className} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
+  //     </Field>
 
-    this.state.uiItems.set(ItemKey, item)
-    this.setState({ uiItems: this.state.uiItems })
-  }
+  //     this.state.uiItems.set(ItemKey, item)
+  //     this.setState({ uiItems: this.state.uiItems })
+  //   }
+  // }
+
 
   moveBoatFromUi(ItemKey: string) {
+
     if (this.state.GameInfo?.BoatMovingAllowed) {
       this.SendDataRequest({ BoatLocationRow: ItemKey[0], BoatLocationColumn: Number(ItemKey.substring(1)) })
     }
   }
 
+
+  addItemToMap(ItemKey: string, Type: string) {
+    //Boat 
+    var itemFromMap = this.state.uiItems.get(ItemKey)
+    var item = <Field className={`${Type} ${itemFromMap?.props.className}`} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} key={itemFromMap?.key?.toString()}>
+    </Field>
+    this.state.uiItems.set(ItemKey, item)
+
+
+    this.setState({ uiItems: this.state.uiItems })
+  }
+
+  removeItemFromMap(ItemKey: string, Type: string) {
+    if (ItemKey !== "") {
+
+      var itemFromMap = this.state.uiItems.get(ItemKey)
+
+      var classNames: string = itemFromMap?.props.className
+      if (classNames) {
+        classNames = classNames.replace(Type, '')
+      }
+      var item = <Field className={classNames} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
+      </Field>
+
+      this.state.uiItems.set(ItemKey, item)
+      this.setState({ uiItems: this.state.uiItems })
+    }
+  }
 
   renderObj = () => {
 
@@ -351,7 +435,7 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
     return (
       <>
-        {/* <button onClick={event => { this.moveBoat("B2") }}>CLICK ON ME</button> */}
+        {/* { <button onClick={event => { this.addItemToMap("B2","treasure") }}>CLICK ON ME</button> } */}
         <FieldWrapper>
           {this.renderObj()}
         </FieldWrapper>
