@@ -37,8 +37,8 @@ interface IGameInfo {
   BoatMovingAllowed?: boolean,
   FiringAllowed?: boolean,
   OwnTreasure?: ILocation,
-  OtherTreasures?: ILocation,
-  Obstacles?: ILocation
+  OtherTreasures?: [ILocation],
+  Obstacles?: [ILocation]
 }
 
 // interface IGameData {
@@ -116,16 +116,26 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
       //BOAT
       if (this.state.GameInfo?.BoatLocationColumn != data.BoatLocationColumn || this.state.GameInfo?.BoatLocationRow != data.BoatLocationRow) {
+        this.removeItemFromMap(this.state.LastBoatLocation,"boat")
         this.moveBoat(NewLocation)
         // this.removeBoat(this.state.LastBoatLocation)
       }
 
       //OWN Treasure
       if (this.state.GameInfo?.OwnTreasure?.location != data.OwnTreasure?.location || this.state.GameInfo?.OwnTreasure?.type != data.OwnTreasure?.type) {
-        this.removeItemFromMap(data.OwnTreasure?.location!,data.OwnTreasure?.type!)
+        //  this.removeItemFromMap(data.OwnTreasure?.location!,data.OwnTreasure?.type!)
         this.addItemToMap(data.OwnTreasure?.location!, data.OwnTreasure?.type!)
-    
       }
+
+      //Other Treasures
+
+      // if (this.state.GameInfo?.OtherTreasures != data.OtherTreasures) {
+      //   data.OtherTreasures?.forEach( tr =>{
+      //     this.addItemToMap(tr.location!, tr.type!)
+      //   })
+      // }
+
+
 
       this.setState({ LastBoatLocation: NewLocation })
       this.setState({ GameInfo: data });
@@ -231,7 +241,13 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     if (CreateList.length != 0) {
       for (let index = 0; index < CreateList.length; index++) {
         var itemFromMap = this.state.uiItems.get(CreateList[index])
-        var item = <Field onClick={(event) => { this.moveBoatFromUi(event.currentTarget.id) }} className="inrange" SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
+        var classNames: string = itemFromMap?.props.className
+
+        if (!classNames.includes("inrange")){
+          classNames = "inrange "  + itemFromMap?.props.className
+        }
+
+        var item = <Field onClick={(event) => { this.moveBoatFromUi(event.currentTarget.id) }} className={classNames}  SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
         </Field>
         this.state.uiItems.set(CreateList[index], item)
       }
@@ -252,23 +268,36 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     //Create radius
     //Left top
     var UiList: string[] = [];
+
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) - 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    UiList.push(Row.toString() + Column.toString())
+
+    if (Column !== 1 && ItemKey.charCodeAt(0) !== 65){
+      UiList.push(Row.toString() + Column.toString())
+    }
+   
 
     //Mid top
-    Column = Number(ItemKey.substring(1));
-    UiList.push(Row.toString() + Column.toString())
-
+      Column = Number(ItemKey.substring(1));
+      if(ItemKey.charCodeAt(0) !== 65){
+        UiList.push(Row.toString() + Column.toString())
+      }
 
     //Right top
     Column = Number(ItemKey.substring(1)) + 1;
-    UiList.push(Row.toString() + Column.toString())
+    if (Column !== 21  && ItemKey.charCodeAt(0) !== 65){
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Left mid
+
     var Row = String.fromCharCode(ItemKey.charCodeAt(0));
     var Column = Number(ItemKey.substring(1)) - 1;
-    UiList.push(Row.toString() + Column.toString())
+    if (Column !== 1){
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Mid Mid 
     var Row = String.fromCharCode(ItemKey.charCodeAt(0));
@@ -277,20 +306,32 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
     //Right mid
     Column = Number(ItemKey.substring(1)) + 1;
-    UiList.push(Row.toString() + Column.toString())
+    if (Column !== 21){
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Left bottom
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) + 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    UiList.push(Row.toString() + Column.toString())
+    if (Column !== 1 && ItemKey.charCodeAt(0) !== 84){
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Mid bottom
     Column = Number(ItemKey.substring(1));
-    UiList.push(Row.toString() + Column.toString())
+    if (ItemKey.charCodeAt(0) !== 84){
+      UiList.push(Row.toString() + Column.toString())
+    }
+
 
     //Right bottom
     Column = Number(ItemKey.substring(1)) + 1;
-    UiList.push(Row.toString() + Column.toString())
+    if (Column !== 21  && ItemKey.charCodeAt(0) !== 84){
+      UiList.push(Row.toString() + Column.toString())
+    }
+ 
 
     return UiList
   }
@@ -303,27 +344,27 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
     //Left top
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) - 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString()) &&  Column !== 1 && ItemKey.charCodeAt(0) !== 65 ) {
       UiList.push(Row.toString() + Column.toString())
     }
 
 
     //Mid top
     Column = Number(ItemKey.substring(1));
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  && ItemKey.charCodeAt(0) !== 65 ) {
       UiList.push(Row.toString() + Column.toString())
     }
 
     //Right top
     Column = Number(ItemKey.substring(1)) + 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString()) &&  Column !== 21  && ItemKey.charCodeAt(0) !== 65 ) {
       UiList.push(Row.toString() + Column.toString())
     }
 
     //Left mid
     var Row = String.fromCharCode(ItemKey.charCodeAt(0));
     var Column = Number(ItemKey.substring(1)) - 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  &&  Column !== 1 ) {
       UiList.push(Row.toString() + Column.toString())
     }
 
@@ -336,26 +377,26 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
     //Right mid
     Column = Number(ItemKey.substring(1)) + 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  &&  Column !== 21 ) {
       UiList.push(Row.toString() + Column.toString())
     }
 
     //Left bottom
     var Row = String.fromCharCode(ItemKey.charCodeAt(0) + 1);
     var Column = Number(ItemKey.substring(1)) - 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  &&  Column !== 1  && ItemKey.charCodeAt(0) !== 84) {
       UiList.push(Row.toString() + Column.toString())
     }
 
     //Mid bottom
     Column = Number(ItemKey.substring(1));
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  && ItemKey.charCodeAt(0) !== 84) {
       UiList.push(Row.toString() + Column.toString())
     }
 
     //Right bottom
     Column = Number(ItemKey.substring(1)) + 1;
-    if (!CreateList.includes(Row.toString() + Column.toString())) {
+    if (!CreateList.includes(Row.toString() + Column.toString())  &&  Column !== 21  && ItemKey.charCodeAt(0) !== 84) {
       UiList.push(Row.toString() + Column.toString())
     }
 
@@ -389,7 +430,14 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   addItemToMap(ItemKey: string, Type: string) {
     //Boat 
     var itemFromMap = this.state.uiItems.get(ItemKey)
-    var item = <Field className={`${Type} ${itemFromMap?.props.className}`} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} key={itemFromMap?.key?.toString()}>
+
+    var className : string = itemFromMap?.props.className
+
+    if (!className.includes(Type)){
+      className = Type
+    }
+
+    var item = <Field className={className} SizeH={itemFromMap?.props.SizeH} SizeL={itemFromMap?.props.SizeL} ColumnStart={itemFromMap?.props.ColumnStart} RowStart={itemFromMap?.props.RowStart} id={itemFromMap?.key?.toString()} key={itemFromMap?.key?.toString()}>
     </Field>
     this.state.uiItems.set(ItemKey, item)
 
@@ -398,6 +446,7 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
   }
 
   removeItemFromMap(ItemKey: string, Type: string) {
+  
     if (ItemKey !== "") {
 
       var itemFromMap = this.state.uiItems.get(ItemKey)
@@ -439,6 +488,7 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
         <FieldWrapper>
           {this.renderObj()}
         </FieldWrapper>
+        <div>Created By Devolder</div>
       </>
     );
   }

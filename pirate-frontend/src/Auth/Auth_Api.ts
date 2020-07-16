@@ -17,7 +17,7 @@ export const onLogin = async (data: Credentials) => {
 
     const requestConfig : AxiosRequestConfig = {
             method:'post',
-            url: 'http://192.168.1.187:3100'  + '/api/user/login',
+            url: 'http://192.168.1.43:3100'  + '/api/user/login',
             data        
     }
 
@@ -45,7 +45,7 @@ export const onLogin = async (data: Credentials) => {
 export const onRegister = async(data : Credentials) => {
     const requestConfig : AxiosRequestConfig = {
         method:'post',
-        url: 'http://192.168.1.187:3100' + '/api/user/register',
+        url: 'http://192.168.1.43:3100' + '/api/user/register',
         data     
     };
 
