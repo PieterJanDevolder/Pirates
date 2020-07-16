@@ -1,10 +1,7 @@
 import * as React from 'react';
 import { Navigation } from 'navi';
 import styled from 'styled-components';
-import { ReactComponent as Logo } from '../Images/001-ingots.svg'
-// import { ReactComponent as Ship } from '../Images/M5AzXVH-pirate-ship-vector.svg'
-import mainLogo from '../Images/PinClipart.com_pirate-images-clip-art_474598.png'
-import './Home.css'
+import './admin.css'
 
 interface IFieldProps {
   ColumnStart?: number,
@@ -488,14 +485,21 @@ export default class Home extends React.Component<IHomeProps, IHomeState> {
 
     const username = localStorage.getItem('Username')
 
-    return (
-      <>
-        {/* { <button onClick={event => { this.addItemToMap("B2","treasure") }}>CLICK ON ME</button> } */}
-        <FieldWrapper>
-          {this.renderObj()}
-        </FieldWrapper>
-        <div>Created By Devolder</div>
-      </>
-    );
+    if (username === "adminadmin"){
+      return (
+        <>
+          {/* { <button onClick={event => { this.addItemToMap("B2","treasure") }}>CLICK ON ME</button> } */}
+          <FieldWrapper>
+            {this.renderObj()}
+          </FieldWrapper>
+          <div>Created By Devolder</div>
+        </>
+      );
+    }
+    else{
+      return(
+        <h1>???</h1>
+      )
+    }
   }
 }
